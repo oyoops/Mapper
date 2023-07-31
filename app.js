@@ -24,16 +24,26 @@ function loadGeoJSON(map) {
             return response.json();
         })
         .then(data => {
+            const bounds = new google.maps.LatLngBounds();
+
             data.features.forEach(feature => {
                 const polygon = new google.maps.Polygon({
                     paths: feature.geometry.coordinates[0].map(coord => ({ lat: coord[1], lng: coord[0] })),
                     map: map
                 });
 
+                // Extend the bounds to include each polygon's coordinates
+                feature.geometry.coordinates[0].forEach(coord => {
+                    bounds.extend({ lat: coord[1], lng: coord[0] });
+                });
+
                 google.maps.event.addListener(polygon, 'click', function (event) {
                     showParcelInfo(event, feature.properties);
                 });
             });
+
+            // Adjust the map view to fit the bounds
+            map.fitBounds(bounds);
         })
         .catch(error => {
             console.log('There was a problem with the fetch operation:', error.message);
